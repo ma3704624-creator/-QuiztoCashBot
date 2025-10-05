@@ -603,17 +603,32 @@ function joinTelegramNow() {
         function copyReferralCode() { navigator.clipboard.writeText(userData.referralCode).then(() => showAlert("Code copied!"), () => showAlert("Failed to copy code.")); }
         
         function shareReferralCode() {
-            const shareTemplate = appConfig.referralShareText || "Use my code {CODE} to get a bonus. App link: {APP_LINK}";
-            const shareText = shareTemplate
-                .replace('{CODE}', userData.referralCode)
-                .replace('{APP_LINK}', window.location.href);
-
-            if (navigator.share) { navigator.share({ title: 'Join CashReward!', text: shareText }); } 
-            else { 
-                navigator.clipboard.writeText(shareText);
-                showAlert("Share feature not available. Link copied!"); 
-            }
-        }
+    const referralCode = userData.referralCode; // আপনার referral code variable
+    
+    // Direct bot link with referral code
+    const botLink = `https://t.me/QuiztoCashBot?start=${referralCode}`;
+    
+    // Share message
+    const shareText = `🎯 Join QuiztoCash এবং আমার সাথে ${appConfig.referralBonus || 100} কয়েন পান!\n\nআমার রেফারাল কোড: ${referralCode}\n\nএখনই যুক্ত হন:`;
+    
+    // Telegram share URL
+    const telegramShareUrl = `https://t.me/share/url?url=${encodeURIComponent(botLink)}&text=${encodeURIComponent(shareText)}`;
+    
+    // Check environment and share
+    if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.openTelegramLink(telegramShareUrl);
+    } else if (navigator.share) {
+        navigator.share({
+            title: 'Join QuiztoCash',
+            text: shareText,
+            url: botLink
+        }).catch(() => {
+            window.open(telegramShareUrl, '_blank');
+        });
+    } else {
+        window.open(telegramShareUrl, '_blank');
+    }
+}
         
         function loadWalletPage() {
             document.getElementById('wallet-coin-balance').textContent = userData.balance || 0;
@@ -643,7 +658,7 @@ const referralInfoHTML = `
             📊 রেফারেল: <span id="referralCount">0</span>/10
         </p>
         <p style="color: #ff5252; font-size: 14px; margin: 5px 0;">
-            ⚠️ Withdrawal করতে কমপক্ষে ১০টি রেফার লাগবে
+            ⚠️ Withdrawal করতে কমপক্ষে ৫টি রেফার লাগবে
         </p>
     </div>
 `;
@@ -663,7 +678,7 @@ if (referralCountEl) {
 }
 
 const withdrawBtn = document.getElementById('withdrawBtn');
-if (withdrawBtn && referralCount < 10) {
+if (withdrawBtn && referralCount < 5) {
     withdrawBtn.disabled = true;
     withdrawBtn.style.opacity = '0.5';
     withdrawBtn.style.cursor = 'not-allowed';
@@ -679,7 +694,7 @@ if (amount < minCoins) {
     return;
 }
 if (!userData.referrals || userData.referrals.length < 10) {
-    showAlert('আপনার কমপক্ষে ১০টি রেফার থাকতে হবে Withdraw করার জন্য!');
+    showAlert('আপনার কমপক্ষে ৫টি রেফার থাকতে হবে Withdraw করার জন্য!');
     return;
 }
             if (amount > userData.balance) return showAlert("Insufficient balance.");
@@ -718,4 +733,5 @@ if (!userData.referrals || userData.referrals.length < 10) {
     </script>
 </body>
 </html>
+
 
